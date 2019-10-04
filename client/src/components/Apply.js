@@ -12,6 +12,9 @@ import HomeIcon from '@material-ui/icons/Home';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
+import firebase from "firebase";
+import FileUploader from "react-firebase-file-uploader";
+import ImageUpload from './ImageUpload'
 
 function Copyright() {
   return (
@@ -67,7 +70,10 @@ export default function SignIn() {
     supervisorPhoneNo: '',
     coFirstName: '',
     coLastName: '',
-    otherResidents: ''
+    otherResidents: '',
+    isUploading: false,
+    progress: 0,
+    files: []
   })
 
   const handleChange = e => {
@@ -75,46 +81,50 @@ export default function SignIn() {
     ...form,
     [e.target.name]: e.target.value
     });
-    console.log(form.firstName);
   }
 
-  const handleAddApplication = (
-      firstName,
-      lastName,
-      dl,
-      dlState,
-      currentIncome,
-      currentHouseholdIncome,
-      currentPayment,
-      employer,
-      supervisor,
-      supervisorPhoneNo,
-      coFirstName,
-      coLastName,
-      otherResidents
-    ) => {
-      fetch('http://localhost:8080/api/applications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          firstName: firstName,
-          lastName: lastName,
-          dl: dl,
-          dlState: dlState,
-          currentIncome: currentIncome,
-          currentHouseholdIncome: currentHouseholdIncome,
-          currentPayment: currentPayment,
-          employer: employer,
-          supervisor: supervisor,
-          supervisorPhoneNo: supervisorPhoneNo,
-          coFirstName: coFirstName,
-          coLastName: coLastName,
-          otherResidents: otherResidents
-        })
+  const customOnChangeHandler = (event) => {
+    const { target: { files } } = event;
+    const filesToStore = [];
+    files.forEach(file => filesToStore.push(file));
+    setValues({
+      ...form,
+      files: filesToStore
+    });
+  }
+
+  const startUploadManually = () => {
+    const { files } = files;
+    files.forEach(file => {
+      this.fileUploader.startUpload(file)
+    });
+  }
+
+  const handleSubmit = e => {
+    e.preventDefault()
+    console.log(form.firstName);
+    fetch('http://localhost:8080/api/applications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        firstName: form.firstName,
+        lastName: form.lastName,
+        dl: form.dl,
+        dlState: form.dlState,
+        currentIncome: form.currentIncome,
+        currentHouseholdIncome: form.currentHouseholdIncome,
+        currentPayment: form.currentPayment,
+        employer: form.employer,
+        supervisor: form.supervisor,
+        supervisorPhoneNo: form.supervisorPhoneNo,
+        coFirstName: form.coFirstName,
+        coLastName: form.coLastName,
+        otherResidents: form.otherResidents
       })
-    }
+    })
+  }
 
   return (
     <Container component="main" maxWidth="xs">
@@ -280,6 +290,7 @@ export default function SignIn() {
             autoFocus
             onChange={handleChange}
           />
+          <ImageUpload />
 
           <Button
             type="submit"
@@ -287,6 +298,7 @@ export default function SignIn() {
             variant="contained"
             color="primary"
             className={classes.submit}
+            onClick={handleSubmit}
           >
             Submit
           </Button>
